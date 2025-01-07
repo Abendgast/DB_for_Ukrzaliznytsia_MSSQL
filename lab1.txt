@@ -1,0 +1,203 @@
+create table Complaints
+(
+    ComplaintID     int identity
+        primary key,
+    PassengerName   nvarchar(100) not null,
+    ContactInfo     nvarchar(255),
+    ComplaintText   nvarchar(max) not null,
+    ComplaintDate   datetime      not null,
+    ComplaintStatus nvarchar(50)
+        check ([ComplaintStatus] = 'Закрито' OR [ComplaintStatus] = 'Вирішено' OR [ComplaintStatus] = 'Розглядається')
+)
+go
+
+create table Employees
+(
+    EmployeeID          int identity
+        primary key,
+    FirstName           nvarchar(100) not null,
+    LastName            nvarchar(100) not null,
+    Position            nvarchar(100) not null,
+    ContactInfo         nvarchar(255),
+    WorkExperienceYears int
+        check ([WorkExperienceYears] >= 0)
+)
+go
+
+create table Passengers
+(
+    PassengerID int identity
+        primary key,
+    FirstName   nvarchar(100) not null,
+    LastName    nvarchar(100) not null,
+    Email       nvarchar(255)
+        unique,
+    DateOfBirth date,
+    Gender      nvarchar(10)
+        check ([Gender] = 'Інший' OR [Gender] = 'Жінка' OR [Gender] = 'Чоловік')
+)
+go
+
+create table Promotions
+(
+    PromotionID   int identity
+        primary key,
+    PromotionName nvarchar(100) not null,
+    DiscountType  nvarchar(50),
+    StartDate     date          not null,
+    EndDate       date          not null,
+    Terms         nvarchar(max)
+)
+go
+
+create table PromotionsHistory
+(
+    PromotionID        int identity
+        primary key,
+    PromotionName      nvarchar(100)              not null,
+    StartDate          date                       not null,
+    EndDate            date                       not null,
+    DiscountPercentage decimal(5, 2)              not null,
+    Description        nvarchar(max),
+    CreatedDate        datetime default getdate() not null
+)
+go
+
+create table Stations
+(
+    StationID          int identity
+        primary key,
+    StationCode        nvarchar(10)  not null
+        unique,
+    Name               nvarchar(100) not null,
+    City               nvarchar(100),
+    Region             nvarchar(100),
+    StationType        nvarchar(50),
+    AvailabilityStatus nvarchar(50)
+        check ([AvailabilityStatus] = 'Тимчасово недоступна' OR [AvailabilityStatus] = 'Доступна')
+)
+go
+
+create table Routes
+(
+    RouteID        int identity
+        primary key,
+    StartStationID int            not null
+        references Stations,
+    EndStationID   int            not null
+        references Stations,
+    DistanceKm     decimal(10, 2) not null,
+    TravelDuration time           not null
+)
+go
+
+create table RouteStations
+(
+    RouteStationID int identity
+        primary key,
+    RouteID        int not null
+        references Routes,
+    StationID      int not null
+        references Stations,
+    StopOrder      int not null,
+    ArrivalTime    time,
+    DepartureTime  time
+)
+go
+
+create table TrainTypes
+(
+    TrainTypeID     int identity
+        primary key,
+    TypeName        nvarchar(50) not null
+        unique,
+    Description     nvarchar(max),
+    Characteristics nvarchar(max)
+)
+go
+
+create table Trains
+(
+    TrainID         int identity
+        primary key,
+    TrainNumber     nvarchar(10) not null
+        unique,
+    TrainTypeID     int          not null
+        references TrainTypes,
+    CarriageCount   int          not null,
+    ManufactureYear int          not null
+        check ([ManufactureYear] >= 1900 AND [ManufactureYear] <= datepart(year, getdate())),
+    TrainStatus     nvarchar(50)
+        check ([TrainStatus] = 'Списаний' OR [TrainStatus] = 'На обслуговуванні' OR [TrainStatus] = 'В роботі')
+)
+go
+
+create table Carriages
+(
+    CarriageID     int identity
+        primary key,
+    TrainID        int not null
+        references Trains,
+    CarriageNumber int not null,
+    CarriageType   nvarchar(50)
+        check ([CarriageType] = 'Люкс' OR [CarriageType] = 'Купе' OR [CarriageType] = 'Плацкарт'),
+    SeatCount      int not null,
+    CarriageStatus nvarchar(50)
+        check ([CarriageStatus] = 'Списаний' OR [CarriageStatus] = 'На ремонті' OR [CarriageStatus] = 'В роботі')
+)
+go
+
+create table CustomerFeedback
+(
+    FeedbackID   int identity
+        primary key,
+    TrainID      int      not null
+        references Trains,
+    Rating       int      not null
+        check ([Rating] >= 1 AND [Rating] <= 5),
+    FeedbackText nvarchar(max),
+    FeedbackDate datetime not null
+)
+go
+
+create table MaintenanceLogs
+(
+    LogID                 int identity
+        primary key,
+    TrainID               int           not null
+        references Trains,
+    MaintenanceDate       datetime      not null,
+    MaintenanceType       nvarchar(100) not null,
+    ResponsibleEmployeeID int           not null
+        references Employees
+)
+go
+
+create table Schedules
+(
+    ScheduleID    int identity
+        primary key,
+    TrainID       int      not null
+        references Trains,
+    RouteID       int      not null
+        references Routes,
+    DepartureDate datetime not null,
+    ArrivalDate   datetime not null
+)
+go
+
+create table Tickets
+(
+    TicketID     int identity
+        primary key,
+    TrainID      int            not null
+        references Trains,
+    PurchaseDate datetime       not null,
+    TicketType   nvarchar(50)
+        check ([TicketType] = 'Паперовий' OR [TicketType] = 'Електронний'),
+    Price        decimal(10, 2) not null,
+    TicketStatus nvarchar(50)
+        check ([TicketStatus] = 'Анульований' OR [TicketStatus] = 'Повернений' OR [TicketStatus] = 'Активний')
+)
+go
+

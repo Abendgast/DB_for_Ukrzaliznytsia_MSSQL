@@ -1,0 +1,1044 @@
+-- Створення Complaints
+CREATE OR ALTER PROCEDURE dbo.sp_SetComplaint
+    @ComplaintID INT = NULL OUTPUT,
+    @PassengerName NVARCHAR(100) = NULL,
+    @ContactInfo NVARCHAR(100) = NULL,
+    @ComplaintText NVARCHAR(MAX) = NULL,
+    @ComplaintDate DATE = NULL,
+    @ComplaintStatus NVARCHAR(50) = NULL
+AS
+BEGIN
+    -- Перевірка вхідних параметрів
+    IF @PassengerName IS NULL OR @ComplaintText IS NULL OR @ComplaintDate IS NULL
+    BEGIN
+        PRINT N'Некоректні значення для @PassengerName, @ComplaintText або @ComplaintDate'
+        RETURN
+    END
+
+    BEGIN TRY
+        IF @ComplaintID IS NULL
+        BEGIN
+            -- Генерація нового ComplaintID
+            SET @ComplaintID = 1 + (SELECT ISNULL(MAX(ComplaintID), 0) FROM dbo.Complaints)
+
+            -- Додавання нового запису
+            INSERT INTO dbo.Complaints (ComplaintID, PassengerName, ContactInfo, ComplaintText, ComplaintDate, ComplaintStatus)
+            VALUES (@ComplaintID, @PassengerName, @ContactInfo, @ComplaintText, @ComplaintDate, @ComplaintStatus)
+        END
+        ELSE
+        BEGIN
+            -- Оновлення існуючого запису
+            UPDATE dbo.Complaints
+            SET PassengerName = ISNULL(@PassengerName, PassengerName),
+                ContactInfo = ISNULL(@ContactInfo, ContactInfo),
+                ComplaintText = ISNULL(@ComplaintText, ComplaintText),
+                ComplaintDate = ISNULL(@ComplaintDate, ComplaintDate),
+                ComplaintStatus = ISNULL(@ComplaintStatus, ComplaintStatus)
+            WHERE ComplaintID = @ComplaintID
+        END
+    END TRY
+    BEGIN CATCH
+        PRINT ERROR_MESSAGE()
+    END CATCH
+END
+-- Додавання нового запису
+DECLARE @NewComplaintID INT;
+
+EXEC dbo.sp_SetComplaint
+    @ComplaintID = @NewComplaintID OUTPUT,
+    @PassengerName = N'Іван Іваненко',
+    @ContactInfo = N'+380501234567',
+    @ComplaintText = N'Запізнення поїзда на 3 години.',
+    @ComplaintDate = '2024-12-01',
+    @ComplaintStatus = N'В обробці';
+
+PRINT N'Новий ComplaintID: ' + CAST(@NewComplaintID AS NVARCHAR);
+
+-- Оновлення існуючого запису
+EXEC dbo.sp_SetComplaint
+    @ComplaintID = 1,
+    @ComplaintStatus = N'Вирішено';
+
+-- Створення CustomerFeedback
+CREATE OR ALTER PROCEDURE dbo.sp_SetCustomerFeedback
+    @FeedbackID INT = NULL OUTPUT,
+    @TrainID INT = NULL,
+    @Rating INT = NULL,
+    @FeedbackText NVARCHAR(MAX) = NULL,
+    @FeedbackDate DATE = NULL
+AS
+BEGIN
+    -- Перевірка вхідних параметрів
+    IF @TrainID IS NULL OR @Rating IS NULL OR @FeedbackText IS NULL OR @FeedbackDate IS NULL
+    BEGIN
+        PRINT N'Некоректні значення для @TrainID, @Rating, @FeedbackText або @FeedbackDate'
+        RETURN
+    END
+
+    -- Перевірка рейтингу (1-5)
+    IF @Rating < 1 OR @Rating > 5
+    BEGIN
+        PRINT N'Рейтинг повинен бути в діапазоні від 1 до 5'
+        RETURN
+    END
+
+    BEGIN TRY
+        IF @FeedbackID IS NULL
+        BEGIN
+            -- Генерація нового FeedbackID
+            SET @FeedbackID = 1 + (SELECT ISNULL(MAX(FeedbackID), 0) FROM dbo.CustomerFeedback)
+
+            -- Додавання нового запису
+            INSERT INTO dbo.CustomerFeedback (FeedbackID, TrainID, Rating, FeedbackText, FeedbackDate)
+            VALUES (@FeedbackID, @TrainID, @Rating, @FeedbackText, @FeedbackDate)
+        END
+        ELSE
+        BEGIN
+            -- Оновлення існуючого запису
+            UPDATE dbo.CustomerFeedback
+            SET TrainID = ISNULL(@TrainID, TrainID),
+                Rating = ISNULL(@Rating, Rating),
+                FeedbackText = ISNULL(@FeedbackText, FeedbackText),
+                FeedbackDate = ISNULL(@FeedbackDate, FeedbackDate)
+            WHERE FeedbackID = @FeedbackID
+        END
+    END TRY
+    BEGIN CATCH
+        PRINT ERROR_MESSAGE()
+    END CATCH
+END
+
+-- Додавання нового запису
+DECLARE @NewFeedbackID INT;
+
+EXEC dbo.sp_SetCustomerFeedback
+    @FeedbackID = @NewFeedbackID OUTPUT,
+    @TrainID = 2,
+    @Rating = 4,
+    @FeedbackText = N'Зручні сидіння, але кондиціонер працював погано.',
+    @FeedbackDate = '2024-12-05';
+
+PRINT N'Новий FeedbackID: ' + CAST(@NewFeedbackID AS NVARCHAR);
+
+-- Оновлення існуючого запису
+EXEC dbo.sp_SetCustomerFeedback
+    @FeedbackID = 1,
+    @Rating = 5,
+    @FeedbackText = N'Кондиціонер полагодили, все чудово!';
+
+--Створення Carriages 
+CREATE OR ALTER PROCEDURE dbo.sp_SetCarriage
+    @CarriageID INT = NULL OUTPUT,
+    @TrainID INT = NULL,
+    @CarriageNumber NVARCHAR(50) = NULL,
+    @CarriageType NVARCHAR(50) = NULL,
+    @SeatCount INT = NULL,
+    @CarriageStatus NVARCHAR(50) = NULL
+AS
+BEGIN
+    -- Перевірка вхідних параметрів
+    IF @TrainID IS NULL OR @CarriageNumber IS NULL OR @CarriageType IS NULL
+    BEGIN
+        PRINT 'Invalid value of @TrainID, @CarriageNumber or @CarriageType'
+        RETURN
+    END
+
+    BEGIN TRY
+        IF @CarriageID IS NULL
+        BEGIN
+            -- Генерація нового CarriageID
+            SET @CarriageID = 1 + (SELECT ISNULL(MAX(CarriageID), 0) FROM dbo.Carriages)
+
+            -- Додавання нового запису
+            INSERT INTO dbo.Carriages (CarriageID, TrainID, CarriageNumber, CarriageType, SeatCount, CarriageStatus)
+            VALUES (@CarriageID, @TrainID, @CarriageNumber, @CarriageType, @SeatCount, @CarriageStatus)
+        END
+        ELSE
+        BEGIN
+            -- Оновлення існуючого запису
+            UPDATE dbo.Carriages
+            SET TrainID = ISNULL(@TrainID, TrainID),
+                CarriageNumber = ISNULL(@CarriageNumber, CarriageNumber),
+                CarriageType = ISNULL(@CarriageType, CarriageType),
+                SeatCount = ISNULL(@SeatCount, SeatCount),
+                CarriageStatus = ISNULL(@CarriageStatus, CarriageStatus)
+            WHERE CarriageID = @CarriageID
+        END
+    END TRY
+    BEGIN CATCH
+        PRINT ERROR_MESSAGE()
+    END CATCH
+END
+
+
+--Додавання запису 
+DECLARE @NewCarriageID INT;
+DECLARE @TrainID INT = 7; -- Задайте ID поїзда
+
+EXEC dbo.sp_SetCarriage
+    @CarriageID = @NewCarriageID OUTPUT,
+    @TrainID = 3,
+    @CarriageNumber = '3',
+    @CarriageType = 'Економ', 
+    @SeatCount = 35,
+    @CarriageStatus = 'На ремонті';
+
+PRINT 'New CarriageID: ' + CAST(@NewCarriageID AS NVARCHAR);
+
+-- Створення Employees
+CREATE OR ALTER PROCEDURE dbo.sp_SetEmployee
+    @EmployeeID INT = NULL OUTPUT,
+    @FirstName NVARCHAR(50) = NULL,
+    @LastName NVARCHAR(50) = NULL,
+    @Position NVARCHAR(100) = NULL,
+    @ContactInfo NVARCHAR(100) = NULL,
+    @WorkExperienceYears INT = NULL
+AS
+BEGIN
+    -- Перевірка вхідних параметрів
+    IF @FirstName IS NULL OR @LastName IS NULL OR @Position IS NULL OR @WorkExperienceYears IS NULL
+    BEGIN
+        PRINT N'Некоректні значення для @FirstName, @LastName, @Position або @WorkExperienceYears'
+        RETURN
+    END
+
+    -- Перевірка років досвіду роботи (не може бути від’ємним)
+    IF @WorkExperienceYears < 0
+    BEGIN
+        PRINT N'Роки досвіду роботи не можуть бути від’ємними'
+        RETURN
+    END
+
+    BEGIN TRY
+        IF @EmployeeID IS NULL
+        BEGIN
+            -- Генерація нового EmployeeID
+            SET @EmployeeID = 1 + (SELECT ISNULL(MAX(EmployeeID), 0) FROM dbo.Employees)
+
+            -- Додавання нового запису
+            INSERT INTO dbo.Employees (EmployeeID, FirstName, LastName, Position, ContactInfo, WorkExperienceYears)
+            VALUES (@EmployeeID, @FirstName, @LastName, @Position, @ContactInfo, @WorkExperienceYears)
+        END
+        ELSE
+        BEGIN
+            -- Оновлення існуючого запису
+            UPDATE dbo.Employees
+            SET FirstName = ISNULL(@FirstName, FirstName),
+                LastName = ISNULL(@LastName, LastName),
+                Position = ISNULL(@Position, Position),
+                ContactInfo = ISNULL(@ContactInfo, ContactInfo),
+                WorkExperienceYears = ISNULL(@WorkExperienceYears, WorkExperienceYears)
+            WHERE EmployeeID = @EmployeeID
+        END
+    END TRY
+    BEGIN CATCH
+        PRINT ERROR_MESSAGE()
+    END CATCH
+END
+
+-- Додавання нового запису
+DECLARE @NewEmployeeID INT;
+
+EXEC dbo.sp_SetEmployee
+    @EmployeeID = @NewEmployeeID OUTPUT,
+    @FirstName = N'Олександр',
+    @LastName = N'Петренко',
+    @Position = N'Машиніст',
+    @ContactInfo = N'+380987654321',
+    @WorkExperienceYears = 8;
+
+PRINT N'Новий EmployeeID: ' + CAST(@NewEmployeeID AS NVARCHAR);
+
+-- Оновлення існуючого запису
+EXEC dbo.sp_SetEmployee
+    @EmployeeID = 1,
+    @Position = N'Головний машиніст',
+    @WorkExperienceYears = 10;
+
+-- Створення MaintenanceLogs
+CREATE OR ALTER PROCEDURE dbo.sp_SetMaintenanceLog
+    @LogID INT = NULL OUTPUT,
+    @TrainID INT = NULL,
+    @MaintenanceDate DATE = NULL,
+    @MaintenanceType NVARCHAR(100) = NULL,
+    @ResponsibleEmployeeID INT = NULL
+AS
+BEGIN
+    -- Перевірка вхідних параметрів
+    IF @TrainID IS NULL OR @MaintenanceDate IS NULL OR @MaintenanceType IS NULL OR @ResponsibleEmployeeID IS NULL
+    BEGIN
+        PRINT N'Некоректні значення для @TrainID, @MaintenanceDate, @MaintenanceType або @ResponsibleEmployeeID'
+        RETURN
+    END
+
+    -- Перевірка дати обслуговування (не може бути в майбутньому)
+    IF @MaintenanceDate > GETDATE()
+    BEGIN
+        PRINT N'Дата обслуговування не може бути в майбутньому'
+        RETURN
+    END
+
+    BEGIN TRY
+        IF @LogID IS NULL
+        BEGIN
+            -- Генерація нового LogID
+            SET @LogID = 1 + (SELECT ISNULL(MAX(LogID), 0) FROM dbo.MaintenanceLogs)
+
+            -- Додавання нового запису
+            INSERT INTO dbo.MaintenanceLogs (LogID, TrainID, MaintenanceDate, MaintenanceType, ResponsibleEmployeeID)
+            VALUES (@LogID, @TrainID, @MaintenanceDate, @MaintenanceType, @ResponsibleEmployeeID)
+        END
+        ELSE
+        BEGIN
+            -- Оновлення існуючого запису
+            UPDATE dbo.MaintenanceLogs
+            SET TrainID = ISNULL(@TrainID, TrainID),
+                MaintenanceDate = ISNULL(@MaintenanceDate, MaintenanceDate),
+                MaintenanceType = ISNULL(@MaintenanceType, MaintenanceType),
+                ResponsibleEmployeeID = ISNULL(@ResponsibleEmployeeID, ResponsibleEmployeeID)
+            WHERE LogID = @LogID
+        END
+    END TRY
+    BEGIN CATCH
+        PRINT ERROR_MESSAGE()
+    END CATCH
+END
+
+-- Додавання нового запису
+DECLARE @NewLogID INT;
+
+EXEC dbo.sp_SetMaintenanceLog
+    @LogID = @NewLogID OUTPUT,
+    @TrainID = 5,
+    @MaintenanceDate = '2024-12-07',
+    @MaintenanceType = N'Регламентне обслуговування',
+    @ResponsibleEmployeeID = 3;
+
+PRINT N'Новий LogID: ' + CAST(@NewLogID AS NVARCHAR);
+
+-- Оновлення існуючого запису
+EXEC dbo.sp_SetMaintenanceLog
+    @LogID = 1,
+    @MaintenanceType = N'Технічний огляд',
+    @MaintenanceDate = '2024-12-06';
+
+-- Створення Passengers
+CREATE OR ALTER PROCEDURE dbo.sp_SetPassenger
+    @PassengerID INT = NULL OUTPUT,
+    @FirstName NVARCHAR(50) = NULL,
+    @LastName NVARCHAR(50) = NULL,
+    @Email NVARCHAR(100) = NULL,
+    @DateOfBirth DATE = NULL,
+    @Gender NVARCHAR(10) = NULL
+AS
+BEGIN
+    -- Перевірка вхідних параметрів
+    IF @FirstName IS NULL OR @LastName IS NULL OR @Email IS NULL OR @DateOfBirth IS NULL OR @Gender IS NULL
+    BEGIN
+        PRINT N'Некоректні значення для @FirstName, @LastName, @Email, @DateOfBirth або @Gender'
+        RETURN
+    END
+
+    -- Перевірка дати народження (пасажир повинен бути старше 18 років)
+    IF @DateOfBirth > DATEADD(YEAR, -18, GETDATE())
+    BEGIN
+        PRINT N'Пасажир повинен бути старше 18 років'
+        RETURN
+    END
+
+    -- Перевірка значення Gender
+    IF @Gender NOT IN (N'Чоловік', N'Жінка')
+    BEGIN
+        PRINT N'Стать може бути тільки "Чоловік" або "Жінка"'
+        RETURN
+    END
+
+    BEGIN TRY
+        IF @PassengerID IS NULL
+        BEGIN
+            -- Генерація нового PassengerID
+            SET @PassengerID = 1 + (SELECT ISNULL(MAX(PassengerID), 0) FROM dbo.Passengers)
+
+            -- Додавання нового запису
+            INSERT INTO dbo.Passengers (PassengerID, FirstName, LastName, Email, DateOfBirth, Gender)
+            VALUES (@PassengerID, @FirstName, @LastName, @Email, @DateOfBirth, @Gender)
+        END
+        ELSE
+        BEGIN
+            -- Оновлення існуючого запису
+            UPDATE dbo.Passengers
+            SET FirstName = ISNULL(@FirstName, FirstName),
+                LastName = ISNULL(@LastName, LastName),
+                Email = ISNULL(@Email, Email),
+                DateOfBirth = ISNULL(@DateOfBirth, DateOfBirth),
+                Gender = ISNULL(@Gender, Gender)
+            WHERE PassengerID = @PassengerID
+        END
+    END TRY
+    BEGIN CATCH
+        PRINT ERROR_MESSAGE()
+    END CATCH
+END
+
+-- Додавання нового запису
+DECLARE @NewPassengerID INT;
+
+EXEC dbo.sp_SetPassenger
+    @PassengerID = @NewPassengerID OUTPUT,
+    @FirstName = N'Іван',
+    @LastName = N'Іванов',
+    @Email = N'ivanov@example.com',
+    @DateOfBirth = '1990-05-15',
+    @Gender = N'Чоловік';
+
+PRINT N'Новий PassengerID: ' + CAST(@NewPassengerID AS NVARCHAR);
+
+-- Оновлення існуючого запису
+EXEC dbo.sp_SetPassenger
+    @PassengerID = 1,
+    @FirstName = N'Марія',
+    @LastName = N'Іванова',
+    @Email = N'maria.ivanova@example.com';
+
+-- Створення Promotions
+CREATE OR ALTER PROCEDURE dbo.sp_SetPromotion
+    @PromotionID INT = NULL OUTPUT,
+    @PromotionName NVARCHAR(100) = NULL,
+    @DiscountType NVARCHAR(50) = NULL,
+    @StartDate DATE = NULL,
+    @EndDate DATE = NULL,
+    @Terms NVARCHAR(MAX) = NULL
+AS
+BEGIN
+    -- Перевірка вхідних параметрів
+    IF @PromotionName IS NULL OR @DiscountType IS NULL OR @StartDate IS NULL OR @EndDate IS NULL OR @Terms IS NULL
+    BEGIN
+        PRINT N'Некоректні значення для @PromotionName, @DiscountType, @StartDate, @EndDate або @Terms'
+        RETURN
+    END
+
+    -- Перевірка дати початку та закінчення акції (кінець не може бути до початку)
+    IF @EndDate < @StartDate
+    BEGIN
+        PRINT N'Дата закінчення не може бути раніше дати початку'
+        RETURN
+    END
+
+    BEGIN TRY
+        IF @PromotionID IS NULL
+        BEGIN
+            -- Генерація нового PromotionID
+            SET @PromotionID = 1 + (SELECT ISNULL(MAX(PromotionID), 0) FROM dbo.Promotions)
+
+            -- Додавання нового запису
+            INSERT INTO dbo.Promotions (PromotionID, PromotionName, DiscountType, StartDate, EndDate, Terms)
+            VALUES (@PromotionID, @PromotionName, @DiscountType, @StartDate, @EndDate, @Terms)
+        END
+        ELSE
+        BEGIN
+            -- Оновлення існуючого запису
+            UPDATE dbo.Promotions
+            SET PromotionName = ISNULL(@PromotionName, PromotionName),
+                DiscountType = ISNULL(@DiscountType, DiscountType),
+                StartDate = ISNULL(@StartDate, StartDate),
+                EndDate = ISNULL(@EndDate, EndDate),
+                Terms = ISNULL(@Terms, Terms)
+            WHERE PromotionID = @PromotionID
+        END
+    END TRY
+    BEGIN CATCH
+        PRINT ERROR_MESSAGE()
+    END CATCH
+END
+
+-- Додавання нового запису
+DECLARE @NewPromotionID INT;
+
+EXEC dbo.sp_SetPromotion
+    @PromotionID = @NewPromotionID OUTPUT,
+    @PromotionName = N'Знижка на квитки',
+    @DiscountType = N'Фіксована знижка',
+    @StartDate = '2024-12-01',
+    @EndDate = '2024-12-31',
+    @Terms = N'Знижка на всі квитки, окрім акційних';
+
+PRINT N'Новий PromotionID: ' + CAST(@NewPromotionID AS NVARCHAR);
+
+-- Оновлення існуючого запису
+EXEC dbo.sp_SetPromotion
+    @PromotionID = 1,
+    @PromotionName = N'Знижка на вибрані поїзди',
+    @DiscountType = N'Процентна знижка',
+    @StartDate = '2024-12-01',
+    @EndDate = '2024-12-15';
+
+-- Створення PromotionsHistory
+CREATE OR ALTER PROCEDURE dbo.sp_SetPromotionHistory
+    @PromotionHistoryID INT = NULL OUTPUT,
+    @PromotionID INT = NULL,
+    @PromotionName NVARCHAR(100) = NULL,
+    @StartDate DATE = NULL,
+    @EndDate DATE = NULL,
+    @DiscountPercentage DECIMAL(5, 2) = NULL,
+    @Description NVARCHAR(MAX) = NULL,
+    @CreatedDate DATE = NULL
+AS
+BEGIN
+    -- Перевірка вхідних параметрів
+    IF @PromotionID IS NULL OR @PromotionName IS NULL OR @StartDate IS NULL OR @EndDate IS NULL OR @DiscountPercentage IS NULL OR @Description IS NULL OR @CreatedDate IS NULL
+    BEGIN
+        PRINT N'Некоректні значення для @PromotionID, @PromotionName, @StartDate, @EndDate, @DiscountPercentage, @Description або @CreatedDate'
+        RETURN
+    END
+
+    -- Перевірка дати початку та закінчення акції (кінець не може бути до початку)
+    IF @EndDate < @StartDate
+    BEGIN
+        PRINT N'Дата закінчення не може бути раніше дати початку'
+        RETURN
+    END
+
+    -- Перевірка значення DiscountPercentage (повинно бути в межах 0-100)
+    IF @DiscountPercentage < 0 OR @DiscountPercentage > 100
+    BEGIN
+        PRINT N'Знижка повинна бути між 0 і 100 відсотками'
+        RETURN
+    END
+
+    BEGIN TRY
+        IF @PromotionHistoryID IS NULL
+        BEGIN
+            -- Генерація нового PromotionHistoryID
+            SET @PromotionHistoryID = 1 + (SELECT ISNULL(MAX(PromotionHistoryID), 0) FROM dbo.PromotionsHistory)
+
+            -- Додавання нового запису в PromotionsHistory
+            INSERT INTO dbo.PromotionsHistory (PromotionHistoryID, PromotionID, PromotionName, StartDate, EndDate, DiscountPercentage, Description, CreatedDate)
+            VALUES (@PromotionHistoryID, @PromotionID, @PromotionName, @StartDate, @EndDate, @DiscountPercentage, @Description, @CreatedDate)
+        END
+        ELSE
+        BEGIN
+            -- Оновлення існуючого запису в PromotionsHistory
+            UPDATE dbo.PromotionsHistory
+            SET PromotionID = ISNULL(@PromotionID, PromotionID),
+                PromotionName = ISNULL(@PromotionName, PromotionName),
+                StartDate = ISNULL(@StartDate, StartDate),
+                EndDate = ISNULL(@EndDate, EndDate),
+                DiscountPercentage = ISNULL(@DiscountPercentage, DiscountPercentage),
+                Description = ISNULL(@Description, Description),
+                CreatedDate = ISNULL(@CreatedDate, CreatedDate)
+            WHERE PromotionHistoryID = @PromotionHistoryID
+        END
+    END TRY
+    BEGIN CATCH
+        PRINT ERROR_MESSAGE()
+    END CATCH
+END
+
+-- Додавання нового запису в PromotionsHistory
+DECLARE @NewPromotionHistoryID INT;
+
+EXEC dbo.sp_SetPromotionHistory
+    @PromotionHistoryID = @NewPromotionHistoryID OUTPUT,
+    @PromotionID = 1,
+    @PromotionName = N'Знижка на вибрані поїзди',
+    @StartDate = '2024-12-01',
+    @EndDate = '2024-12-15',
+    @DiscountPercentage = 15.00,
+    @Description = N'Знижка на квитки для деяких поїздів',
+    @CreatedDate = GETDATE();
+
+PRINT N'Новий PromotionHistoryID: ' + CAST(@NewPromotionHistoryID AS NVARCHAR);
+
+-- Оновлення існуючого запису в PromotionsHistory
+EXEC dbo.sp_SetPromotionHistory
+    @PromotionHistoryID = 1,
+    @PromotionID = 2,
+    @PromotionName = N'Акція на святкові квитки',
+    @StartDate = '2024-12-20',
+    @EndDate = '2024-12-31',
+    @DiscountPercentage = 20.00;
+
+-- Створення Routes
+CREATE OR ALTER PROCEDURE dbo.sp_SetRoute
+    @RouteID INT = NULL OUTPUT,
+    @StartStationID INT = NULL,
+    @EndStationID INT = NULL,
+    @DistanceKm DECIMAL(5, 2) = NULL,
+    @TravelDuration TIME = NULL
+AS
+BEGIN
+    -- Перевірка вхідних параметрів
+    IF @StartStationID IS NULL OR @EndStationID IS NULL OR @DistanceKm IS NULL OR @TravelDuration IS NULL
+    BEGIN
+        PRINT N'Некоректні значення для @StartStationID, @EndStationID, @DistanceKm або @TravelDuration'
+        RETURN
+    END
+
+    -- Перевірка, чи є однакові станції для старту та кінця маршруту
+    IF @StartStationID = @EndStationID
+    BEGIN
+        PRINT N'Станція відправлення не може бути однаковою зі станцією призначення'
+        RETURN
+    END
+
+    -- Перевірка значення DistanceKm (має бути додатнім)
+    IF @DistanceKm <= 0
+    BEGIN
+        PRINT N'Відстань повинна бути додатньою'
+        RETURN
+    END
+
+    BEGIN TRY
+        IF @RouteID IS NULL
+        BEGIN
+            -- Генерація нового RouteID
+            SET @RouteID = 1 + (SELECT ISNULL(MAX(RouteID), 0) FROM dbo.Routes)
+
+            -- Додавання нового запису в Routes
+            INSERT INTO dbo.Routes (RouteID, StartStationID, EndStationID, DistanceKm, TravelDuration)
+            VALUES (@RouteID, @StartStationID, @EndStationID, @DistanceKm, @TravelDuration)
+        END
+        ELSE
+        BEGIN
+            -- Оновлення існуючого запису в Routes
+            UPDATE dbo.Routes
+            SET StartStationID = ISNULL(@StartStationID, StartStationID),
+                EndStationID = ISNULL(@EndStationID, EndStationID),
+                DistanceKm = ISNULL(@DistanceKm, DistanceKm),
+                TravelDuration = ISNULL(@TravelDuration, TravelDuration)
+            WHERE RouteID = @RouteID
+        END
+    END TRY
+    BEGIN CATCH
+        PRINT ERROR_MESSAGE()
+    END CATCH
+END
+
+-- Додавання нового запису в Routes
+DECLARE @NewRouteID INT;
+
+EXEC dbo.sp_SetRoute
+    @RouteID = @NewRouteID OUTPUT,
+    @StartStationID = 1, 
+    @EndStationID = 5,   
+    @DistanceKm = 120.50, 
+    @TravelDuration = '02:15:00';  -- Формат 'HH:MM:SS'
+
+PRINT N'Новий RouteID: ' + CAST(@NewRouteID AS NVARCHAR);
+
+-- Оновлення існуючого запису в Routes
+EXEC dbo.sp_SetRoute
+    @RouteID = 1,
+    @StartStationID = 2,
+    @EndStationID = 4,
+    @DistanceKm = 100.00,
+    @TravelDuration = '01:45:00';
+-- Створення RouteStations
+CREATE OR ALTER PROCEDURE dbo.sp_SetRouteStation
+    @RouteStationID INT = NULL OUTPUT,
+    @RouteID INT = NULL,
+    @StationID INT = NULL,
+    @StopOrder INT = NULL,
+    @ArrivalTime TIME = NULL,
+    @DepartureTime TIME = NULL
+AS
+BEGIN
+    -- Перевірка вхідних параметрів
+    IF @RouteID IS NULL OR @StationID IS NULL OR @StopOrder IS NULL OR @ArrivalTime IS NULL OR @DepartureTime IS NULL
+    BEGIN
+        PRINT N'Некоректні значення для @RouteID, @StationID, @StopOrder, @ArrivalTime або @DepartureTime'
+        RETURN
+    END
+
+    -- Перевірка, чи правильна послідовність станцій (StopOrder повинна бути більшою за попереднє значення)
+    IF EXISTS (SELECT 1 FROM dbo.RouteStations WHERE RouteID = @RouteID AND StopOrder = @StopOrder)
+    BEGIN
+        PRINT N'Запис з таким StopOrder вже існує для цього маршруту'
+        RETURN
+    END
+
+    BEGIN TRY
+        IF @RouteStationID IS NULL
+        BEGIN
+            -- Генерація нового RouteStationID
+            SET @RouteStationID = 1 + (SELECT ISNULL(MAX(RouteStationID), 0) FROM dbo.RouteStations)
+
+            -- Додавання нового запису в RouteStations
+            INSERT INTO dbo.RouteStations (RouteStationID, RouteID, StationID, StopOrder, ArrivalTime, DepartureTime)
+            VALUES (@RouteStationID, @RouteID, @StationID, @StopOrder, @ArrivalTime, @DepartureTime)
+        END
+        ELSE
+        BEGIN
+            -- Оновлення існуючого запису в RouteStations
+            UPDATE dbo.RouteStations
+            SET RouteID = ISNULL(@RouteID, RouteID),
+                StationID = ISNULL(@StationID, StationID),
+                StopOrder = ISNULL(@StopOrder, StopOrder),
+                ArrivalTime = ISNULL(@ArrivalTime, ArrivalTime),
+                DepartureTime = ISNULL(@DepartureTime, DepartureTime)
+            WHERE RouteStationID = @RouteStationID
+        END
+    END TRY
+    BEGIN CATCH
+        PRINT ERROR_MESSAGE()
+    END CATCH
+END
+
+-- Додавання нового запису в RouteStations
+DECLARE @NewRouteStationID INT;
+
+EXEC dbo.sp_SetRouteStation
+    @RouteStationID = @NewRouteStationID OUTPUT,
+    @RouteID = 1,         
+    @StationID = 3,       
+    @StopOrder = 1,       
+    @ArrivalTime = '08:00:00',
+    @DepartureTime = '08:15:00';
+
+PRINT N'Новий RouteStationID: ' + CAST(@NewRouteStationID AS NVARCHAR);
+
+-- Оновлення існуючого запису в RouteStations
+EXEC dbo.sp_SetRouteStation
+    @RouteStationID = 1,
+    @RouteID = 1,
+    @StationID = 4,
+    @StopOrder = 2,
+    @ArrivalTime = '09:30:00',
+    @DepartureTime = '09:45:00';
+-- Створення Schedules
+CREATE OR ALTER PROCEDURE dbo.sp_SetSchedule
+    @ScheduleID INT = NULL OUTPUT,
+    @TrainID INT = NULL,
+    @RouteID INT = NULL,
+    @DepartureDate DATETIME = NULL,
+    @ArrivalDate DATETIME = NULL
+AS
+BEGIN
+    -- Перевірка вхідних параметрів
+    IF @TrainID IS NULL OR @RouteID IS NULL OR @DepartureDate IS NULL OR @ArrivalDate IS NULL
+    BEGIN
+        PRINT N'Некоректні значення для @TrainID, @RouteID, @DepartureDate або @ArrivalDate'
+        RETURN
+    END
+
+    -- Перевірка, чи дата відправлення не перевищує дату прибуття
+    IF @DepartureDate >= @ArrivalDate
+    BEGIN
+        PRINT N'Дата відправлення не може бути більшою або рівною даті прибуття'
+        RETURN
+    END
+
+    BEGIN TRY
+        IF @ScheduleID IS NULL
+        BEGIN
+            -- Генерація нового ScheduleID
+            SET @ScheduleID = 1 + (SELECT ISNULL(MAX(ScheduleID), 0) FROM dbo.Schedules)
+
+            -- Додавання нового запису в Schedules
+            INSERT INTO dbo.Schedules (ScheduleID, TrainID, RouteID, DepartureDate, ArrivalDate)
+            VALUES (@ScheduleID, @TrainID, @RouteID, @DepartureDate, @ArrivalDate)
+        END
+        ELSE
+        BEGIN
+            -- Оновлення існуючого запису в Schedules
+            UPDATE dbo.Schedules
+            SET TrainID = ISNULL(@TrainID, TrainID),
+                RouteID = ISNULL(@RouteID, RouteID),
+                DepartureDate = ISNULL(@DepartureDate, DepartureDate),
+                ArrivalDate = ISNULL(@ArrivalDate, ArrivalDate)
+            WHERE ScheduleID = @ScheduleID
+        END
+    END TRY
+    BEGIN CATCH
+        PRINT ERROR_MESSAGE()
+    END CATCH
+END
+
+-- Додавання нового запису в Schedules
+DECLARE @NewScheduleID INT;
+
+EXEC dbo.sp_SetSchedule
+    @ScheduleID = @NewScheduleID OUTPUT,
+    @TrainID = 3,              
+    @RouteID = 2,            
+    @DepartureDate = '2024-12-10 06:00:00',
+    @ArrivalDate = '2024-12-10 09:30:00';
+
+PRINT N'Новий ScheduleID: ' + CAST(@NewScheduleID AS NVARCHAR);
+
+-- Оновлення існуючого запису в Schedules
+EXEC dbo.sp_SetSchedule
+    @ScheduleID = 1,         
+    @TrainID = 4,              
+    @RouteID = 3,              
+    @DepartureDate = '2024-12-11 08:00:00',
+    @ArrivalDate = '2024-12-11 12:00:00';
+
+CREATE OR ALTER PROCEDURE dbo.sp_SetStation
+    @StationID INT = NULL OUTPUT,
+    @StationCode NVARCHAR(50) = NULL,
+    @Name NVARCHAR(100) = NULL,
+    @City NVARCHAR(100) = NULL,
+    @Region NVARCHAR(100) = NULL,
+    @StationType NVARCHAR(50) = NULL,
+    @AvailabilityStatus NVARCHAR(50) = NULL
+AS
+BEGIN
+    -- Перевірка вхідних параметрів
+    IF @StationCode IS NULL OR @Name IS NULL OR @City IS NULL
+    BEGIN
+        PRINT 'Invalid value of @StationCode, @Name or @City'
+        RETURN
+    END
+
+    BEGIN TRY
+        IF @StationID IS NULL
+        BEGIN
+            -- Генерація нового StationID
+            SET @StationID = 1 + (SELECT ISNULL(MAX(StationID), 0) FROM dbo.Stations)
+
+            -- Додавання нового запису
+            INSERT INTO dbo.Stations (StationID, StationCode, Name, City, Region, StationType, AvailabilityStatus)
+            VALUES (@StationID, @StationCode, @Name, @City, @Region, @StationType, @AvailabilityStatus)
+        END
+        ELSE
+        BEGIN
+            -- Оновлення існуючого запису
+            UPDATE dbo.Stations
+            SET StationCode = ISNULL(@StationCode, StationCode),
+                Name = ISNULL(@Name, Name),
+                City = ISNULL(@City, City),
+                Region = ISNULL(@Region, Region),
+                StationType = ISNULL(@StationType, StationType),
+                AvailabilityStatus = ISNULL(@AvailabilityStatus, AvailabilityStatus)
+            WHERE StationID = @StationID
+        END
+    END TRY
+    BEGIN CATCH
+        PRINT ERROR_MESSAGE()
+    END CATCH
+END
+
+-- Додавання нового запису
+DECLARE @NewStationID INT;
+
+EXEC dbo.sp_SetStation
+    @StationID = @NewStationID OUTPUT,
+    @StationCode = 'K001',
+    @Name = 'Київ-Пасажирський',
+    @City = 'Київ',
+    @Region = 'Київська область',
+    @StationType = 'Вокзал',
+    @AvailabilityStatus = 'Діючий';
+
+PRINT 'New StationID: ' + CAST(@NewStationID AS NVARCHAR);
+
+-- Оновлення існуючого запису
+DECLARE @ExistingStationID INT = 1; 
+
+EXEC dbo.sp_SetStation
+    @StationID = @ExistingStationID,
+    @Region = 'Оновлена область',
+    @AvailabilityStatus = 'Тимчасово закритий';
+
+PRINT 'Updated StationID: ' + CAST(@ExistingStationID AS NVARCHAR);
+
+CREATE OR ALTER PROCEDURE dbo.sp_SetTicket
+    @TicketID INT = NULL OUTPUT,
+    @TrainID INT = NULL,
+    @PurchaseDate DATE = NULL,
+    @TicketType NVARCHAR(50) = NULL,
+    @Price DECIMAL(10, 2) = NULL,
+    @TicketStatus NVARCHAR(50) = NULL,
+    @CarriageID INT = NULL
+AS
+BEGIN
+    -- Перевірка вхідних параметрів
+    IF @TrainID IS NULL OR @PurchaseDate IS NULL OR @TicketType IS NULL OR @Price IS NULL
+    BEGIN
+        PRINT 'Invalid value of @TrainID, @PurchaseDate, @TicketType or @Price'
+        RETURN
+    END
+
+    BEGIN TRY
+        IF @TicketID IS NULL
+        BEGIN
+            -- Генерація нового TicketID
+            SET @TicketID = 1 + (SELECT ISNULL(MAX(TicketID), 0) FROM dbo.Tickets)
+
+            -- Додавання нового запису
+            INSERT INTO dbo.Tickets (TicketID, TrainID, PurchaseDate, TicketType, Price, TicketStatus, CarriageID)
+            VALUES (@TicketID, @TrainID, @PurchaseDate, @TicketType, @Price, @TicketStatus, @CarriageID)
+        END
+        ELSE
+        BEGIN
+            -- Оновлення існуючого запису
+            UPDATE dbo.Tickets
+            SET TrainID = ISNULL(@TrainID, TrainID),
+                PurchaseDate = ISNULL(@PurchaseDate, PurchaseDate),
+                TicketType = ISNULL(@TicketType, TicketType),
+                Price = ISNULL(@Price, Price),
+                TicketStatus = ISNULL(@TicketStatus, TicketStatus),
+                CarriageID = ISNULL(@CarriageID, CarriageID)
+            WHERE TicketID = @TicketID
+        END
+    END TRY
+    BEGIN CATCH
+        PRINT ERROR_MESSAGE()
+    END CATCH
+END
+
+-- Додавання нового запису
+DECLARE @NewTicketID INT;
+
+EXEC dbo.sp_SetTicket
+    @TicketID = @NewTicketID OUTPUT,
+    @TrainID = 5,
+    @PurchaseDate = '2024-12-09',
+    @TicketType = 'Купе',
+    @Price = 500.00,
+    @TicketStatus = 'Активний',
+    @CarriageID = 12;
+
+PRINT 'New TicketID: ' + CAST(@NewTicketID AS NVARCHAR);
+
+-- Оновлення існуючого запису
+DECLARE @ExistingTicketID INT = 3; 
+
+EXEC dbo.sp_SetTicket
+    @TicketID = @ExistingTicketID,
+    @TicketStatus = 'Скасований',
+    @Price = 450.00;
+
+PRINT 'Updated TicketID: ' + CAST(@ExistingTicketID AS NVARCHAR);
+CREATE OR ALTER PROCEDURE dbo.sp_SetTrain
+    @TrainID INT = NULL OUTPUT,
+    @TrainNumber NVARCHAR(50) = NULL,
+    @TrainTypeID INT = NULL,
+    @CarriageCount INT = NULL,
+    @ManufactureYear INT = NULL,
+    @TrainStatus NVARCHAR(50) = NULL
+AS
+BEGIN
+    -- Перевірка вхідних параметрів
+    IF @TrainNumber IS NULL OR @TrainTypeID IS NULL OR @CarriageCount IS NULL OR @ManufactureYear IS NULL
+    BEGIN
+        PRINT 'Invalid value of @TrainNumber, @TrainTypeID, @CarriageCount or @ManufactureYear'
+        RETURN
+    END
+
+    BEGIN TRY
+        IF @TrainID IS NULL
+        BEGIN
+            -- Генерація нового TrainID
+            SET @TrainID = 1 + (SELECT ISNULL(MAX(TrainID), 0) FROM dbo.Trains)
+
+            -- Додавання нового запису
+            INSERT INTO dbo.Trains (TrainID, TrainNumber, TrainTypeID, CarriageCount, ManufactureYear, TrainStatus)
+            VALUES (@TrainID, @TrainNumber, @TrainTypeID, @CarriageCount, @ManufactureYear, @TrainStatus)
+        END
+        ELSE
+        BEGIN
+            -- Оновлення існуючого запису
+            UPDATE dbo.Trains
+            SET TrainNumber = ISNULL(@TrainNumber, TrainNumber),
+                TrainTypeID = ISNULL(@TrainTypeID, TrainTypeID),
+                CarriageCount = ISNULL(@CarriageCount, CarriageCount),
+                ManufactureYear = ISNULL(@ManufactureYear, ManufactureYear),
+                TrainStatus = ISNULL(@TrainStatus, TrainStatus)
+            WHERE TrainID = @TrainID
+        END
+    END TRY
+    BEGIN CATCH
+        PRINT ERROR_MESSAGE()
+    END CATCH
+END
+
+-- Додавання нового запису
+DECLARE @NewTrainID INT;
+
+EXEC dbo.sp_SetTrain
+    @TrainID = @NewTrainID OUTPUT,
+    @TrainNumber = '123A',
+    @TrainTypeID = 2,
+    @CarriageCount = 10,
+    @ManufactureYear = 2015,
+    @TrainStatus = 'Діючий';
+
+PRINT 'New TrainID: ' + CAST(@NewTrainID AS NVARCHAR);
+
+-- Оновлення існуючого запису
+DECLARE @ExistingTrainID INT = 4; 
+
+EXEC dbo.sp_SetTrain
+    @TrainID = @ExistingTrainID,
+    @TrainStatus = 'На ремонті',
+    @CarriageCount = 8;
+
+PRINT 'Updated TrainID: ' + CAST(@ExistingTrainID AS NVARCHAR);
+
+CREATE OR ALTER PROCEDURE dbo.sp_SetTrain
+    @TrainID INT = NULL OUTPUT,
+    @TrainNumber NVARCHAR(50) = NULL,
+    @TrainTypeID INT = NULL,
+    @CarriageCount INT = NULL,
+    @ManufactureYear INT = NULL,
+    @TrainStatus NVARCHAR(50) = NULL
+AS
+BEGIN
+    -- Перевірка вхідних параметрів
+    IF @TrainNumber IS NULL OR @TrainTypeID IS NULL OR @CarriageCount IS NULL OR @ManufactureYear IS NULL
+    BEGIN
+        PRINT 'Invalid value of @TrainNumber, @TrainTypeID, @CarriageCount or @ManufactureYear'
+        RETURN
+    END
+
+    BEGIN TRY
+        IF @TrainID IS NULL
+        BEGIN
+            -- Генерація нового TrainID
+            SET @TrainID = 1 + (SELECT ISNULL(MAX(TrainID), 0) FROM dbo.Trains)
+
+            -- Додавання нового запису
+            INSERT INTO dbo.Trains (TrainID, TrainNumber, TrainTypeID, CarriageCount, ManufactureYear, TrainStatus)
+            VALUES (@TrainID, @TrainNumber, @TrainTypeID, @CarriageCount, @ManufactureYear, @TrainStatus)
+        END
+        ELSE
+        BEGIN
+            -- Оновлення існуючого запису
+            UPDATE dbo.Trains
+            SET TrainNumber = ISNULL(@TrainNumber, TrainNumber),
+                TrainTypeID = ISNULL(@TrainTypeID, TrainTypeID),
+                CarriageCount = ISNULL(@CarriageCount, CarriageCount),
+                ManufactureYear = ISNULL(@ManufactureYear, ManufactureYear),
+                TrainStatus = ISNULL(@TrainStatus, TrainStatus)
+            WHERE TrainID = @TrainID
+        END
+    END TRY
+    BEGIN CATCH
+        PRINT ERROR_MESSAGE()
+    END CATCH
+END
+
+-- Додавання нового запису
+DECLARE @NewTrainID INT;
+
+EXEC dbo.sp_SetTrain
+    @TrainID = @NewTrainID OUTPUT,
+    @TrainNumber = '123A',
+    @TrainTypeID = 2,
+    @CarriageCount = 10,
+    @ManufactureYear = 2015,
+    @TrainStatus = 'Діючий';
+
+PRINT 'New TrainID: ' + CAST(@NewTrainID AS NVARCHAR);
+
+-- Оновлення існуючого запису
+DECLARE @ExistingTrainID INT = 4; 
+
+EXEC dbo.sp_SetTrain
+    @TrainID = @ExistingTrainID,
+    @TrainStatus = 'На ремонті',
+    @CarriageCount = 8;
+
+PRINT 'Updated TrainID: ' + CAST(@ExistingTrainID AS NVARCHAR);

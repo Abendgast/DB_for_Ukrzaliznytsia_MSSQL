@@ -1,0 +1,72 @@
+INSERT INTO Stations (StationCode, Name, City, Region, StationType, AvailabilityStatus)
+VALUES
+    ('001', 'Київ', 'Київ', 'Київська область', 'Вокзал', 'Доступна'),
+    ('002', 'Львів', 'Львів', 'Львівська область', 'Вокзал', 'Доступна'),
+    ('003', 'Харків', 'Харків', 'Харківська область', 'Вокзал', 'Доступна'),
+    ('004', 'Дніпро', 'Дніпро', 'Дніпропетровська область', 'Вокзал', 'Доступна'),
+    ('005', 'Одеса', 'Одеса', 'Одеська область', 'Вокзал', 'Доступна');
+INSERT INTO TrainTypes (TypeName, Description, Characteristics)
+VALUES
+    ('Пасажирський', 'Тепловоз для перевезення пасажирів', 'Комфортні вагони, кондиціонери'),
+    ('Швидкісний', 'Поїзд для швидких перевезень', 'Максимальна швидкість 200 км/год'),
+    ('Інтерсіті', 'Поїзд міжміського сполучення', 'Комфортні місця, Wi-Fi');
+INSERT INTO Trains (TrainNumber, TrainTypeID, CarriageCount, ManufactureYear, TrainStatus)
+VALUES
+    ('001', 1, 10, 2010, 'В роботі'),
+    ('002', 2, 12, 2015, 'На обслуговуванні'),
+    ('003', 3, 8, 2020, 'В роботі');
+INSERT INTO Routes (StartStationID, EndStationID, DistanceKm, TravelDuration)
+VALUES
+    (1, 2, 540.5, '06:00:00'),
+    (2, 3, 310.0, '04:30:00'),
+    (3, 4, 350.3, '05:15:00');
+INSERT INTO RouteStations (RouteID, StationID, StopOrder, ArrivalTime, DepartureTime)
+VALUES
+    (1, 1, 1, '08:00:00', '08:05:00'),
+    (1, 2, 2, '10:00:00', '10:05:00'),
+    (2, 2, 1, '12:00:00', '12:05:00'),
+    (2, 3, 2, '14:00:00', '14:05:00');
+INSERT INTO Schedules (TrainID, RouteID, DepartureDate, ArrivalDate)
+VALUES
+    (1, 1, '2024-12-05 08:00:00', '2024-12-05 14:00:00'),
+    (2, 2, '2024-12-06 12:00:00', '2024-12-06 16:30:00');
+INSERT INTO Tickets (TrainID, PurchaseDate, TicketType, Price, TicketStatus)
+VALUES
+    (1, '2024-12-05 07:00:00', 'Електронний', 300.00, 'Активний'),
+    (2, '2024-12-06 10:00:00', 'Паперовий', 250.00, 'Анульований');
+INSERT INTO Employees (FirstName, LastName, Position, ContactInfo, WorkExperienceYears)
+VALUES
+    ('Олексій', 'Мельник', 'Механік', 'oleksiy.melnik@example.com', 5),
+    ('Юлія', 'Іванова', 'Провідник', 'yuliya.ivanova@example.com', 3);
+INSERT INTO MaintenanceLogs (TrainID, MaintenanceDate, MaintenanceType, ResponsibleEmployeeID)
+VALUES
+    (1, '2024-12-05 10:00:00', 'Заміна колеса', 1),
+    (2, '2024-12-06 12:30:00', 'Технічне обслуговування', 2);
+INSERT INTO Promotions (PromotionName, DiscountType, StartDate, EndDate, Terms)
+VALUES
+    ('Зимова знижка', 'Процентна', '2024-12-01', '2024-12-31', 'Знижка 10% на всі квитки'),
+    ('Акція "Два поїзди"', 'Фіксована', '2024-12-01', '2024-12-31', 'При купівлі двох квитків на один рейс, знижка 20%');
+INSERT INTO CustomerFeedback (TrainID, Rating, FeedbackText, FeedbackDate)
+VALUES
+    (1, 5, 'Чудовий сервіс, все було на вищому рівні!', '2024-12-05 15:00:00'),
+    (2, 4, 'Поїзд був вчасно, але кондиціонер не працював', '2024-12-06 13:00:00');
+INSERT INTO Carriages (TrainID, CarriageNumber, CarriageType, SeatCount, CarriageStatus)
+VALUES
+    (1, 1, 'Плацкарт', 50, 'В роботі'),
+    (1, 2, 'Купе', 30, 'В роботі');
+INSERT INTO Complaints (PassengerName, ContactInfo, ComplaintText, ComplaintDate, ComplaintStatus)
+VALUES
+    ('Вікторія Сидоренко', 'victoria@example.com', 'Затримка поїзда на 3 години', '2024-12-05 16:00:00', 'Розглядається');
+INSERT INTO Passengers (FirstName, LastName, Email, DateOfBirth, Gender)
+VALUES
+    ('Іван', 'Петренко', 'ivan.petrenko@example.com', '1990-05-15', 'Чоловік'),
+    ('Марія', 'Ковальчук', 'maria.kovalchuk@example.com', '1985-08-22', 'Жінка'),
+    ('Олександр', 'Сидоренко', 'oleksandr.sydorenko@example.com', '1992-11-30', 'Чоловік'),
+    ('Тетяна', 'Шевченко', 'tetiana.shevchenko@example.com', '1980-07-11', 'Жінка');
+INSERT INTO PromotionsHistory (PromotionName, StartDate, EndDate, DiscountPercentage, Description)
+VALUES
+    ('Різдвяна акція', '2023-12-20', '2023-01-05', 15.00, 'Знижка 15% на квитки з 20 грудня по 5 січня'),
+    ('Літні канікули', '2023-06-01', '2023-08-31', 10.00, 'Знижка 10% на квитки в літній період для дітей та студентів'),
+    ('Новорічна знижка', '2023-12-25', '2024-01-10', 20.00, 'Знижка 20% на квитки в новорічний період'),
+    ('Сезонні знижки', '2023-03-01', '2023-05-31', 5.00, 'Знижка 5% на квитки в весняний період');
+

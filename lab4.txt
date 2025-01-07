@@ -1,0 +1,72 @@
+--Запит 1: Вільні місця в поїзді та вагоні
+CREATE TABLE Seats (
+    SeatID INT PRIMARY KEY,
+    CarriageID INT,
+    SeatNumber INT,
+    IsAvailable BIT,
+    FOREIGN KEY (CarriageID) REFERENCES Carriages(CarriageID)
+);
+
+SELECT
+    t.TrainNumber AS TrainNumber,
+    c.CarriageNumber AS CarriageNumber,
+    c.SeatCount AS TotalSeats,
+    s.SeatNumber AS AvailableSeatNumber
+FROM
+    Carriages c
+JOIN
+    Trains t ON c.TrainID = t.TrainID
+JOIN
+    Seats s ON c.CarriageID = s.CarriageID
+WHERE
+    s.IsAvailable = 1 
+    AND t.TrainNumber = '003' 
+ORDER BY
+    c.CarriageNumber, s.SeatNumber;
+
+
+--Запит 2: Інформація про маршрути
+SELECT TOP 5
+    r.RouteID AS RouteID,
+    t.TrainNumber AS TrainNumber,
+    s.Name AS StationName,
+    rs.ArrivalTime AS ArrivalTime,
+    rs.DepartureTime AS DepartureTime
+FROM
+    Routes r
+JOIN
+    RouteStations rs ON r.RouteID = rs.RouteID
+JOIN
+    Stations s ON rs.StationID = s.StationID
+JOIN
+    Trains t ON r.RouteID = t.TrainID
+ORDER BY
+    r.RouteID, rs.StopOrder;
+
+--Запит 3: Лог ремонту із деталями поїзді
+SELECT TOP 5
+    t.TrainNumber AS TrainNumber,
+    ml.MaintenanceDate AS MaintenanceDate,
+    ml.MaintenanceType AS MaintenanceType,
+    e.FirstName AS EmployeeFirstName,
+    e.LastName AS EmployeeLastName
+FROM
+    MaintenanceLogs ml
+JOIN
+    Trains t ON ml.TrainID = t.TrainID
+JOIN
+    Employees e ON ml.ResponsibleEmployeeID = e.EmployeeID
+ORDER BY
+    ml.MaintenanceDate DESC;
+
+-- Запит 4: Відкриті скарги пасажирів
+SELECT TOP 5
+    c.ComplaintDate AS ComplaintDate,
+    c.ComplaintText AS ComplaintText,
+    c.PassengerName AS PassengerName
+FROM
+    Complaints c
+WHERE
+    c.ComplaintStatus = 'Розглядається'
+ORDER BY
+    c.ComplaintDate DESC;

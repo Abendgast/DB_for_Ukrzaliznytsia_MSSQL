@@ -1,0 +1,99 @@
+-- Створення процедури PurchaseTicket 
+
+CREATE PROCEDURE PurchaseTicket
+    @TrainID INT,
+    @CarriageID INT,
+    @SeatNumber INT,
+    @Price DECIMAL(10, 2),
+    @TicketType NVARCHAR(50),
+    @PurchaseDate DATETIME
+AS
+BEGIN
+    BEGIN TRY
+        DECLARE @AvailableSeats INT;
+        DECLARE @TicketStatus NVARCHAR(50) = 'Активний';
+
+        -- Перевірка наявності вільних місць
+        SELECT @AvailableSeats = COUNT(*)
+        FROM Tickets
+        WHERE TrainID = @TrainID
+          AND CarriageID = @CarriageID
+          AND TicketStatus = @TicketStatus;
+
+        IF @AvailableSeats < @SeatNumber
+            BEGIN
+                PRINT N'Недостатньо вільних місць';
+                RETURN;
+            END;
+
+        -- Створення нового запису у таблиці Tickets
+        INSERT INTO Tickets (TrainID, CarriageID, SeatNumber, Price, TicketType, TicketStatus, PurchaseDate)
+        VALUES (@TrainID, @CarriageID, @SeatNumber, @Price, @TicketType, @TicketStatus, @PurchaseDate);
+
+        PRINT N'Квиток успішно придбано';
+    END TRY
+    BEGIN CATCH
+        PRINT N'Помилка: ' + ERROR_MESSAGE();
+    END CATCH;
+END;
+
+--Створення процедури ManageSchedule
+
+CREATE PROCEDURE ManageSchedule
+    @TrainID INT,
+    @RouteID INT,
+    @DepartureDate DATETIME,
+    @ArrivalDate DATETIME
+AS
+BEGIN
+    BEGIN TRY
+        -- Перевірка унікальності
+        IF EXISTS (SELECT 1 FROM Schedules WHERE TrainID = @TrainID AND RouteID = @RouteID AND DepartureDate = @DepartureDate)
+            BEGIN
+                -- Оновлення існуючого запису
+                UPDATE Schedules
+                SET ArrivalDate = @ArrivalDate
+                WHERE TrainID = @TrainID AND RouteID = @RouteID AND DepartureDate = @DepartureDate;
+
+                PRINT N'Розклад оновлено';
+            END
+        ELSE
+            BEGIN
+                -- Додавання нового запису
+                INSERT INTO Schedules (TrainID, RouteID, DepartureDate, ArrivalDate)
+                VALUES (@TrainID, @RouteID, @DepartureDate, @ArrivalDate);
+
+                PRINT N'Розклад додано';
+            END;
+    END TRY
+    BEGIN CATCH
+        PRINT N'Помилка: ' + ERROR_MESSAGE();
+    END CATCH;
+END;
+
+--Створення процедури ManageRoutes 
+
+CREATE PROCEDURE ManageRoutes
+    @StartStationID INT,
+    @EndStationID INT,
+    @DistanceKm DECIMAL(10, 2),
+    @TravelDuration TIME
+AS
+BEGIN
+    BEGIN TRY
+        DECLARE @RouteID INT;
+
+        -- Створення нового маршруту
+        INSERT INTO Routes (StartStationID, EndStationID, DistanceKm, TravelDuration)
+        VALUES (@StartStationID, @EndStationID, @DistanceKm, @TravelDuration);
+
+        SET @RouteID = SCOPE_IDENTITY();
+
+        -- Заповнення RouteStations залежить від додаткових деталей, які не були зазначені
+        
+        PRINT N'Маршрут успішно створено з ID: ' + CAST(@RouteID AS NVARCHAR);
+    END TRY
+    BEGIN CATCH
+        PRINT N'Помилка: ' + ERROR_MESSAGE();
+    END CATCH;
+END;

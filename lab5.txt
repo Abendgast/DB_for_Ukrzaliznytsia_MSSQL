@@ -1,0 +1,78 @@
+CREATE VIEW AvailableSeatsView AS
+SELECT
+    c.CarriageID,
+    c.CarriageNumber,
+    c.SeatCount AS TotalSeats,
+    (c.SeatCount - COALESCE(COUNT(tk.TicketID), 0)) AS AvailableSeats,
+    t.TrainNumber
+FROM
+    Carriages c
+JOIN
+    Trains t ON c.TrainID = t.TrainID
+LEFT JOIN
+    Tickets tk ON c.TrainID = tk.TrainID  -- Зв'язок за TrainID
+GROUP BY
+    c.CarriageID, c.CarriageNumber, c.SeatCount, t.TrainNumber;
+
+
+
+GO
+
+CREATE VIEW RouteStationsView AS
+SELECT
+    r.RouteID,
+    s.Name AS StationName,
+    rs.ArrivalTime,
+    rs.DepartureTime
+FROM
+    Routes r
+JOIN
+    RouteStations rs ON r.RouteID = rs.RouteID
+JOIN
+    Stations s ON rs.StationID = s.StationID;
+
+GO
+
+CREATE VIEW OpenComplaintsView AS
+SELECT
+    c.ComplaintDate,
+    c.ComplaintText,
+    c.PassengerName
+FROM
+    Complaints c
+WHERE
+    c.ComplaintStatus = 'Open';
+
+GO
+
+CREATE VIEW MaintenanceWithEmployeesView AS
+SELECT
+    t.TrainNumber,
+    ml.MaintenanceDate,
+    ml.MaintenanceType,
+    e.FirstName,
+    e.LastName
+FROM
+    Trains t
+JOIN
+    MaintenanceLogs ml ON t.TrainID = ml.TrainID
+JOIN
+    Employees e ON ml.ResponsibleEmployeeID = e.EmployeeID;
+
+GO
+
+CREATE VIEW PassengerFeedbackView AS
+SELECT
+    cf.FeedbackDate,
+    cf.FeedbackText,
+    cf.Rating,
+    p.FirstName,
+    p.LastName
+FROM
+    CustomerFeedback cf
+JOIN
+    Passengers p ON cf.FeedbackID = p.PassengerID
+WHERE
+    cf.Rating IS NOT NULL;
+
+GO

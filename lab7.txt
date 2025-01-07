@@ -1,0 +1,115 @@
+--Створення збережених процедур
+CREATE OR ALTER PROCEDURE dbo.sp_GetComplaints
+    @ComplaintID INT = NULL,
+    @ComplaintDate DATE = NULL,
+    @ComplaintStatus NVARCHAR(50) = NULL,
+    @ComplaintText NVARCHAR(MAX) = NULL,
+    @ContactInfo NVARCHAR(100) = NULL,
+    @PassengerName NVARCHAR(100) = NULL,
+    @PageSize INT = 20,
+    @PageNumber INT = 1,
+    @SortColumn NVARCHAR(128) = 'ComplaintID', -- 'ComplaintDate', 'ComplaintStatus', 'ComplaintText', 'ContactInfo', 'PassengerName'
+    @SortDirection BIT = 0        -- 0-ASC, 1-DESC
+AS
+BEGIN
+    SELECT *
+    FROM Complaints
+    WHERE (@ComplaintID IS NULL OR ComplaintID = @ComplaintID)
+      AND (@ComplaintDate IS NULL OR ComplaintDate = @ComplaintDate)
+      AND (@ComplaintStatus IS NULL OR ComplaintStatus LIKE @ComplaintStatus + '%')
+      AND (@ComplaintText IS NULL OR ComplaintText LIKE @ComplaintText + '%')
+      AND (@ContactInfo IS NULL OR ContactInfo LIKE @ContactInfo + '%')
+      AND (@PassengerName IS NULL OR PassengerName LIKE @PassengerName + '%')
+    ORDER BY
+        CASE
+            WHEN @SortDirection = 0 THEN
+                CASE @SortColumn
+                    WHEN 'ComplaintID' THEN ComplaintID
+                    WHEN 'ComplaintDate' THEN ComplaintDate
+                    WHEN 'ComplaintStatus' THEN ComplaintStatus
+                    WHEN 'ComplaintText' THEN ComplaintText
+                    WHEN 'ContactInfo' THEN ContactInfo
+                    WHEN 'PassengerName' THEN PassengerName
+                END
+        END ASC,
+        CASE
+            WHEN @SortDirection = 1 THEN
+                CASE @SortColumn
+                    WHEN 'ComplaintID' THEN ComplaintID
+                    WHEN 'ComplaintDate' THEN ComplaintDate
+                    WHEN 'ComplaintStatus' THEN ComplaintStatus
+                    WHEN 'ComplaintText' THEN ComplaintText
+                    WHEN 'ContactInfo' THEN ContactInfo
+                    WHEN 'PassengerName' THEN PassengerName
+                END
+        END DESC
+    OFFSET (@PageNumber - 1) * @PageSize ROWS
+    FETCH NEXT @PageSize ROWS ONLY;
+END;
+CREATE OR ALTER PROCEDURE dbo.sp_GetCustomerFeedback
+    @FeedbackID INT = NULL,
+    @FeedbackDate DATE = NULL,
+    @FeedbackText NVARCHAR(MAX) = NULL,
+    @Rating INT = NULL,
+    @TrainID INT = NULL,
+    @PageSize INT = 20,
+    @PageNumber INT = 1,
+    @SortColumn NVARCHAR(128) = 'FeedbackID', -- 'FeedbackDate', 'FeedbackText', 'Rating', 'TrainID'
+    @SortDirection BIT = 0        -- 0-ASC, 1-DESC
+AS
+BEGIN
+    SELECT *
+    FROM CustomerFeedback
+    WHERE (@FeedbackID IS NULL OR FeedbackID = @FeedbackID)
+      AND (@FeedbackDate IS NULL OR FeedbackDate = @FeedbackDate)
+      AND (@FeedbackText IS NULL OR FeedbackText LIKE @FeedbackText + '%')
+      AND (@Rating IS NULL OR Rating = @Rating)
+      AND (@TrainID IS NULL OR TrainID = @TrainID)
+    ORDER BY
+        CASE
+            WHEN @SortDirection = 0 THEN
+                CASE @SortColumn
+                    WHEN 'FeedbackID' THEN FeedbackID
+                    WHEN 'FeedbackDate' THEN FeedbackDate
+                    WHEN 'FeedbackText' THEN FeedbackText
+                    WHEN 'Rating' THEN Rating
+                    WHEN 'TrainID' THEN TrainID
+                END
+        END ASC,
+        CASE
+            WHEN @SortDirection = 1 THEN
+                CASE @SortColumn
+                    WHEN 'FeedbackID' THEN FeedbackID
+                    WHEN 'FeedbackDate' THEN FeedbackDate
+                    WHEN 'FeedbackText' THEN FeedbackText
+                    WHEN 'Rating' THEN Rating
+                    WHEN 'TrainID' THEN TrainID
+                END
+        END DESC
+    OFFSET (@PageNumber - 1) * @PageSize ROWS
+    FETCH NEXT @PageSize ROWS ONLY;
+END;
+-- Виклик збережених процедур та перевірка результатів
+
+EXEC dbo.sp_GetComplaints
+    @ComplaintID = NULL,
+    @ComplaintDate = NULL,
+    @ComplaintStatus = 'Розглядається',
+    @ComplaintText = NULL,
+    @ContactInfo = NULL,
+    @PassengerName = NULL,
+    @PageSize = 10,
+    @PageNumber = 1,
+    @SortColumn = 'ComplaintID',
+    @SortDirection = 0;
+
+EXEC dbo.sp_GetCustomerFeedback
+    @FeedbackID = NULL,
+    @FeedbackDate = NULL,
+    @FeedbackText = NULL,
+    @Rating = 5,
+    @TrainID = NULL,
+    @PageSize = 10,
+    @PageNumber = 1,
+    @SortColumn = 'FeedbackID',
+    @SortDirection = 0;
